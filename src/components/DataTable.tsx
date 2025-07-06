@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export interface Column<T> {
   key: keyof T;
@@ -16,6 +17,8 @@ export interface DataTableProps<T> {
   stickyColumns?: (keyof T)[];  // 고정할 열들을 지정
   height?: string;
   className?: string;
+  pageSize?: number;
+  onRowClick?: (row: T) => void;
 }
 
 type SortConfig<T> = {
@@ -27,9 +30,14 @@ export function DataTable<T>({
   data,
   columns,
   stickyColumns = [],  // 기본값은 빈 배열
-  height = "600px",
-  className
+  height = "400px",
+  className,
+  pageSize = 10,
+  onRowClick
 }: DataTableProps<T>) {
+  const [sortConfig, setSortConfig] = useState<SortConfig<T>>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
   // 고정 열의 누적 너비 계산
   const getStickyLeft = (columnIndex: number) => {
     let leftOffset = 0;
@@ -47,8 +55,6 @@ export function DataTable<T>({
   const isColumnSticky = (columnKey: keyof T) => {
     return stickyColumns.includes(columnKey);
   };
-
-  const [sortConfig, setSortConfig] = useState<SortConfig<T>>(null);
 
   // 정렬된 데이터
   const sortedData = useMemo(() => {
@@ -68,6 +74,16 @@ export function DataTable<T>({
     });
   }, [data, sortConfig]);
 
+  // 페이지네이션된 데이터
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sortedData.slice(startIndex, endIndex);
+  }, [sortedData, currentPage, pageSize]);
+
+  // 총 페이지 수
+  const totalPages = Math.ceil(data.length / pageSize);
+
   // 정렬 핸들러
   const handleSort = (key: keyof T) => {
     setSortConfig(current => {
@@ -80,6 +96,12 @@ export function DataTable<T>({
       }
       return { key, direction: 'asc' };
     });
+    setCurrentPage(1); // 정렬 시 첫 페이지로 이동
+  };
+
+  // 페이지 변경
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   // 정렬 아이콘 렌더링
@@ -93,7 +115,8 @@ export function DataTable<T>({
   };
 
   return (
-    <div className={cn("relative overflow-hidden bg-card rounded-lg shadow-lg border border-table-border", className)}>
+    <div className={cn("relative bg-card rounded-lg shadow-lg border border-table-border", className)}>
+      {/* 테이블 */}
       <div 
         className="overflow-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background"
         style={{ height }}
@@ -131,14 +154,15 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((row, rowIndex) => (
+            {paginatedData.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
                 className={cn(
                   "border-b border-table-border transition-colors duration-150",
-                  "hover:bg-table-row-hover",
+                  "hover:bg-table-row-hover cursor-pointer",
                   rowIndex % 2 === 0 ? "bg-card" : "bg-table-stripe"
                 )}
+                onClick={() => onRowClick?.(row)}
               >
                 {columns.map((column, colIndex) => {
                   const isSticky = isColumnSticky(column.key);
@@ -170,6 +194,70 @@ export function DataTable<T>({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 푸터 - 페이지네이션 */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-table-border bg-card">
+        <div className="text-sm text-muted-foreground">
+          총 {data.length}개 중 {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, data.length)}개 표시
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            이전
+          </Button>
+          
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const page = i + 1;
+              return (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 p-0"
+                >
+                  {page}
+                </Button>
+              );
+            })}
+            
+            {totalPages > 5 && (
+              <>
+                <span className="text-muted-foreground">...</span>
+                <Button
+                  variant={currentPage === totalPages ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(totalPages)}
+                  className="w-8 h-8 p-0"
+                >
+                  {totalPages}
+                </Button>
+              </>
+            )}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            다음
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <div className="text-sm text-muted-foreground">
+          페이지 {currentPage} / {totalPages}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,22 @@
 import { DataTable, Column } from '@/components/DataTable';
 import { Employee, sampleEmployees } from '@/data/sampleData';
+import { EmployeeDetailModal } from '@/components/EmployeeDetailModal';
+import { useState } from 'react';
 
 const Index = () => {
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleRowClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEmployee(null);
+  };
+
   // 테이블 컬럼 정의
   const columns: Column<Employee>[] = [
     {
@@ -161,8 +176,17 @@ const Index = () => {
           data={sampleEmployees}
           columns={columns}
           stickyColumns={['id', 'name']}  // ID와 이름 열을 고정
-          height="500px"
+          height="400px"
+          pageSize={10}
           className="mb-6"
+          onRowClick={handleRowClick}
+        />
+
+        {/* 직원 상세 모달 */}
+        <EmployeeDetailModal
+          employee={selectedEmployee}
+          open={isModalOpen}
+          onClose={handleCloseModal}
         />
 
         {/* 사용법 안내 */}
@@ -174,6 +198,8 @@ const Index = () => {
             <li>• <strong>고정 헤더:</strong> 세로 스크롤 시 헤더가 상단에 고정됨</li>
             <li>• <strong>고정 열:</strong> 가로 스크롤 시 ID와 이름 열이 왼쪽에 고정됨 (원하는 열 지정 가능)</li>
             <li>• <strong>호버 효과:</strong> 행에 마우스를 올리면 하이라이트됨</li>
+            <li>• <strong>행 클릭:</strong> 직원 행을 클릭하면 상세 정보 모달이 열림</li>
+            <li>• <strong>페이지네이션:</strong> 테이블 하단에서 페이지 이동 및 정보 확인 가능</li>
           </ul>
         </div>
       </div>
