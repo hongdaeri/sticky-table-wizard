@@ -107,7 +107,7 @@ export function DataTable<T>({
     if (isLoading) {
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 10000); // 10초 로딩 시뮬레이션
+      }, 800); // 800ms 로딩 시뮬레이션
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
@@ -145,8 +145,8 @@ export function DataTable<T>({
       >
         {/* 테이블 바디 로딩 오버레이 */}
         {isLoading && (
-          <div className="sticky top-1/2 left-0 right-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center h-0 -translate-y-1/2">
-            <div className="flex flex-col items-center gap-3 bg-background/90 rounded-lg p-6 shadow-lg border">
+          <div className="sticky top-1/2 left-0 right-0 bg-background/80 backdrop-blur-md z-40 flex items-center justify-center h-0 -translate-y-1/2">
+            <div className="flex flex-col items-center gap-3 bg-background/90 rounded-lg p-6 shadow-lg">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">데이터를 불러오는 중...</p>
             </div>
