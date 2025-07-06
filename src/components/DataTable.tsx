@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface Column<T> {
   key: keyof T;
@@ -32,11 +33,12 @@ export function DataTable<T>({
   stickyColumns = [],  // 기본값은 빈 배열
   height = "400px",
   className,
-  pageSize = 10,
+  pageSize: initialPageSize = 10,
   onRowClick
 }: DataTableProps<T>) {
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
 
   // 고정 열의 누적 너비 계산
   const getStickyLeft = (columnIndex: number) => {
@@ -102,6 +104,12 @@ export function DataTable<T>({
   // 페이지 변경
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // 페이지 사이즈 변경
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPageSize(Number(newPageSize));
+    setCurrentPage(1); // 페이지 사이즈 변경 시 첫 페이지로 이동
   };
 
   // 정렬 아이콘 렌더링
@@ -255,8 +263,26 @@ export function DataTable<T>({
           </Button>
         </div>
         
-        <div className="text-sm text-muted-foreground">
-          페이지 {currentPage} / {totalPages}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            페이지 {currentPage} / {totalPages}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">페이지당</span>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-20 h-8 bg-background border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-border z-50">
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">개씩</span>
+          </div>
         </div>
       </div>
     </div>
