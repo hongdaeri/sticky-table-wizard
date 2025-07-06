@@ -137,21 +137,22 @@ export function DataTable<T>({
 
   return (
     <div className={cn("relative bg-card rounded-lg shadow-lg border border-table-border", className)}>
-      {/* 로딩 오버레이 */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">데이터를 불러오는 중...</p>
-          </div>
-        </div>
-      )}
 
       {/* 테이블 */}
       <div 
-        className="overflow-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background"
+        className="relative overflow-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background"
         style={{ height }}
       >
+        {/* 테이블 바디 로딩 오버레이 */}
+        {isLoading && (
+          <div className="absolute inset-0 top-12 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">데이터를 불러오는 중...</p>
+            </div>
+          </div>
+        )}
+
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-20 bg-table-header border-b border-table-border">
             <tr>
@@ -184,7 +185,7 @@ export function DataTable<T>({
               })}
             </tr>
           </thead>
-          <tbody>
+          <tbody className={cn(isLoading && "opacity-30")}>
             {paginatedData.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
