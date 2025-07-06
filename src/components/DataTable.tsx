@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,6 +39,7 @@ export function DataTable<T>({
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 고정 열의 누적 너비 계산
   const getStickyLeft = (columnIndex: number) => {
@@ -101,13 +102,25 @@ export function DataTable<T>({
     setCurrentPage(1); // 정렬 시 첫 페이지로 이동
   };
 
+  // 로딩 상태 처리
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 800); // 800ms 로딩 시뮬레이션
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
+
   // 페이지 변경
   const handlePageChange = (page: number) => {
+    setIsLoading(true);
     setCurrentPage(page);
   };
 
   // 페이지 사이즈 변경
   const handlePageSizeChange = (newPageSize: string) => {
+    setIsLoading(true);
     setPageSize(Number(newPageSize));
     setCurrentPage(1); // 페이지 사이즈 변경 시 첫 페이지로 이동
   };
@@ -124,6 +137,16 @@ export function DataTable<T>({
 
   return (
     <div className={cn("relative bg-card rounded-lg shadow-lg border border-table-border", className)}>
+      {/* 로딩 오버레이 */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">데이터를 불러오는 중...</p>
+          </div>
+        </div>
+      )}
+
       {/* 테이블 */}
       <div 
         className="overflow-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background"
@@ -215,7 +238,7 @@ export function DataTable<T>({
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || isLoading}
           >
             <ChevronLeft className="w-4 h-4" />
             이전
@@ -231,6 +254,7 @@ export function DataTable<T>({
                   size="sm"
                   onClick={() => handlePageChange(page)}
                   className="w-8 h-8 p-0"
+                  disabled={isLoading}
                 >
                   {page}
                 </Button>
@@ -245,6 +269,7 @@ export function DataTable<T>({
                   size="sm"
                   onClick={() => handlePageChange(totalPages)}
                   className="w-8 h-8 p-0"
+                  disabled={isLoading}
                 >
                   {totalPages}
                 </Button>
@@ -256,7 +281,7 @@ export function DataTable<T>({
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || isLoading}
           >
             다음
             <ChevronRight className="w-4 h-4" />
@@ -269,7 +294,7 @@ export function DataTable<T>({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">페이지당</span>
-            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange} disabled={isLoading}>
               <SelectTrigger className="w-20 h-8 bg-background border-border">
                 <SelectValue />
               </SelectTrigger>
