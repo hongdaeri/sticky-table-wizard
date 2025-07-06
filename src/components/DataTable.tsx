@@ -145,8 +145,8 @@ export function DataTable<T>({
       >
         {/* 테이블 바디 로딩 오버레이 */}
         {isLoading && (
-          <div className="absolute inset-0 top-12 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
+          <div className="absolute inset-0 top-12 bg-background/80 backdrop-blur-sm z-40">
+            <div className="sticky top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">데이터를 불러오는 중...</p>
             </div>
