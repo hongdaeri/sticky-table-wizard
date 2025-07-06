@@ -107,7 +107,7 @@ export function DataTable<T>({
     if (isLoading) {
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 800); // 800ms 로딩 시뮬레이션
+      }, 10000); // 10초 로딩 시뮬레이션
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
