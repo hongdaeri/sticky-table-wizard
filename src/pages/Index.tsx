@@ -160,7 +160,7 @@ const Index = () => {
         <DataTable
           data={sampleEmployees}
           columns={columns}
-          stickyFirstColumn={true}
+          stickyColumns={['id', 'name']}  // ID와 이름 열을 고정
           height="500px"
           className="mb-6"
         />
@@ -172,7 +172,7 @@ const Index = () => {
             <li>• <strong>정렬:</strong> 헤더를 클릭하여 오름차순/내림차순/정렬해제 가능</li>
             <li>• <strong>스크롤:</strong> 테이블 내에서 수평/수직 스크롤 지원</li>
             <li>• <strong>고정 헤더:</strong> 세로 스크롤 시 헤더가 상단에 고정됨</li>
-            <li>• <strong>고정 첫 번째 열:</strong> 가로 스크롤 시 ID와 이름 열이 왼쪽에 고정됨</li>
+            <li>• <strong>고정 열:</strong> 가로 스크롤 시 ID와 이름 열이 왼쪽에 고정됨 (원하는 열 지정 가능)</li>
             <li>• <strong>호버 효과:</strong> 행에 마우스를 올리면 하이라이트됨</li>
           </ul>
         </div>

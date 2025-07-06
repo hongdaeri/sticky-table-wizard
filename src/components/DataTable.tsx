@@ -13,7 +13,7 @@ export interface Column<T> {
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  stickyFirstColumn?: boolean;
+  stickyColumns?: (keyof T)[];  // 고정할 열들을 지정
   height?: string;
   className?: string;
 }
@@ -26,10 +26,28 @@ type SortConfig<T> = {
 export function DataTable<T>({
   data,
   columns,
-  stickyFirstColumn = true,
+  stickyColumns = [],  // 기본값은 빈 배열
   height = "600px",
   className
 }: DataTableProps<T>) {
+  // 고정 열의 누적 너비 계산
+  const getStickyLeft = (columnIndex: number) => {
+    let leftOffset = 0;
+    for (let i = 0; i < columnIndex; i++) {
+      const column = columns[i];
+      if (stickyColumns.includes(column.key)) {
+        const width = column.width || '120px';
+        leftOffset += parseInt(width) || 120;
+      }
+    }
+    return leftOffset;
+  };
+
+  // 열이 고정되어 있는지 확인
+  const isColumnSticky = (columnKey: keyof T) => {
+    return stickyColumns.includes(columnKey);
+  };
+
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>(null);
 
   // 정렬된 데이터
@@ -83,27 +101,33 @@ export function DataTable<T>({
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-20 bg-table-header border-b border-table-border">
             <tr>
-              {columns.map((column, index) => (
-                <th
-                  key={String(column.key)}
-                  className={cn(
-                    "px-4 py-3 text-left text-sm font-semibold text-table-header-foreground border-r border-table-border last:border-r-0",
-                    "transition-colors duration-200",
-                    column.sortable && "cursor-pointer hover:bg-primary-light hover:text-primary",
-                    stickyFirstColumn && index === 0 && "sticky left-0 z-30 bg-table-header"
-                  )}
-                  style={{ 
-                    width: column.width,
-                    minWidth: column.width || '120px'
-                  }}
-                  onClick={column.sortable ? () => handleSort(column.key) : undefined}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate">{column.header}</span>
-                    {column.sortable && renderSortIcon(column.key)}
-                  </div>
-                </th>
-              ))}
+              {columns.map((column, index) => {
+                const isSticky = isColumnSticky(column.key);
+                const leftOffset = isSticky ? getStickyLeft(index) : 0;
+                
+                return (
+                  <th
+                    key={String(column.key)}
+                    className={cn(
+                      "px-4 py-3 text-left text-sm font-semibold text-table-header-foreground border-r border-table-border last:border-r-0",
+                      "transition-colors duration-200",
+                      column.sortable && "cursor-pointer hover:bg-primary-light hover:text-primary",
+                      isSticky && "sticky z-30 bg-table-header shadow-md"
+                    )}
+                    style={{ 
+                      width: column.width,
+                      minWidth: column.width || '120px',
+                      left: isSticky ? `${leftOffset}px` : 'auto'
+                    }}
+                    onClick={column.sortable ? () => handleSort(column.key) : undefined}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate">{column.header}</span>
+                      {column.sortable && renderSortIcon(column.key)}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -116,26 +140,32 @@ export function DataTable<T>({
                   rowIndex % 2 === 0 ? "bg-card" : "bg-table-stripe"
                 )}
               >
-                {columns.map((column, colIndex) => (
-                  <td
-                    key={String(column.key)}
-                    className={cn(
-                      "px-4 py-3 text-sm text-card-foreground border-r border-table-border last:border-r-0",
-                      "whitespace-nowrap overflow-hidden text-ellipsis",
-                      stickyFirstColumn && colIndex === 0 && "sticky left-0 z-10",
-                      stickyFirstColumn && colIndex === 0 && rowIndex % 2 === 0 ? "bg-card" : "",
-                      stickyFirstColumn && colIndex === 0 && rowIndex % 2 === 1 ? "bg-table-stripe" : ""
-                    )}
-                    style={{ 
-                      width: column.width,
-                      minWidth: column.width || '120px'
-                    }}
-                  >
-                    <div className="truncate" title={String(row[column.key])}>
-                      {column.render ? column.render(row[column.key], row) : String(row[column.key])}
-                    </div>
-                  </td>
-                ))}
+                {columns.map((column, colIndex) => {
+                  const isSticky = isColumnSticky(column.key);
+                  const leftOffset = isSticky ? getStickyLeft(colIndex) : 0;
+                  
+                  return (
+                    <td
+                      key={String(column.key)}
+                      className={cn(
+                        "px-4 py-3 text-sm text-card-foreground border-r border-table-border last:border-r-0",
+                        "whitespace-nowrap overflow-hidden text-ellipsis",
+                        isSticky && "sticky z-10 shadow-md",
+                        isSticky && rowIndex % 2 === 0 ? "bg-card" : "",
+                        isSticky && rowIndex % 2 === 1 ? "bg-table-stripe" : ""
+                      )}
+                      style={{ 
+                        width: column.width,
+                        minWidth: column.width || '120px',
+                        left: isSticky ? `${leftOffset}px` : 'auto'
+                      }}
+                    >
+                      <div className="truncate" title={String(row[column.key])}>
+                        {column.render ? column.render(row[column.key], row) : String(row[column.key])}
+                      </div>
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
